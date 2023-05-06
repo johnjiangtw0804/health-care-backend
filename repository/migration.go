@@ -167,5 +167,36 @@ func (d *GormDatabase) AutoMigrate() error {
 		return err
 	}
 
+	// generate some views
+	if err := d.DB.Exec(`
+	CREATE VIEW PATIENT_DASHBOARD_VIEW AS (
+    SELECT
+        p.patient_id AS ID,
+        p.first_name,
+        p.last_name,
+        p.age,
+        p.sex,
+        p.blood_type,
+        p.dob AS DOB,
+        p.doctor_id AS assigned_doctor_ID,
+        v.body_tempertature,
+        v.pulse_rate,
+        v.resipirate_rate,
+        v.systolic_pressure,
+        v.diastolic_pressure,
+        m.prescribed_medications AS current_prescribed_med,
+        d.disease AS current_disease
+    FROM
+        PATIENT AS p
+    JOIN
+        vital_sign AS v ON p.patient_id = v.patient_id
+    JOIN
+        patient_medications AS m ON p.patient_id = m.patient_id
+    JOIN
+        patient_disease AS d ON p.patient_id = d.patient_id
+	);`).Error; err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -6,14 +6,14 @@ import (
 
 type PatientDashboardView struct {
 	ID                   int
-	FirstName            string
+	FirstName            string `gorm:""`
 	LastName             string
 	Age                  int
 	Sex                  string
 	BloodType            string
 	DOB                  time.Time
 	AssignedDoctorID     int
-	BodyTemperature      float64
+	BodyTempertature     float64
 	PulseRate            int
 	RespirationRate      int
 	SystolicPressure     int

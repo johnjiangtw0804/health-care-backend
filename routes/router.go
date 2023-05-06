@@ -20,11 +20,10 @@ func Register(
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	router.Use(cors.New(config))
 
-	// dashboardRepo := repository.DashboardRepo(db)
+	dashboardRepo := repository.NewDashboardRepo(db)
 
-	// noAuthRouters := router.Group("")
-	// userHandler := NewUserHandler(logger, userRepo, api.NewMapUtilities(env.GOOGLE_MAP_API_KEY), api.NewEventsSearcher(env.TICKET_MASTER_API_KEY))
+	dashboardHandler := NewDashboardHandler(logger, dashboardRepo)
 
-	// noAuthRouters.GET("/api/user/events", userHandler.listEvents)
+	router.GET("/api/dashboard/patient", dashboardHandler.GetPatientDashboard)
 	return router
 }
