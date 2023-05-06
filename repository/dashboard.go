@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	model "health-care-backend/repository/model"
 )
 
@@ -39,5 +40,6 @@ func (d *dashboardRepo) SelectNurseDashboard(nid int) ([]model.NurseDashboardVie
 	if err := d.db.DB.Raw(`SELECT * FROM public.nurse_dashboard_view WHERE nurse_id = ?`, nid).Scan(&records).Error; err != nil {
 		return nil, err
 	}
+	fmt.Println(records)
 	return records, nil
 }

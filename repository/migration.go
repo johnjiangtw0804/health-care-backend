@@ -202,7 +202,7 @@ func (d *GormDatabase) AutoMigrate() error {
 		n.first_name AS nurse_first_name,
 		n.last_name AS nurse_last_name,
 		p.patient_id,
-		p.first_name AS paitent_first_name,
+		p.first_name AS patient_first_name,
 		p.last_name AS patient_last_name,
 		p.age,
 		p.sex,

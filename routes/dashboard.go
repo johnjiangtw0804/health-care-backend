@@ -222,11 +222,11 @@ func (h *DashboardHandler) GetNurseDashboard(ctx *gin.Context) {
 				CurrentPrescribedMeds: make(map[string]int),
 				CurrentDiseases:       make(map[string]int),
 			}
-			p := idToPatient[view.PatientID]
-			p.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
-			p.CurrentDiseases[view.CurrentDisease] = 1
-			idToPatient[view.PatientID] = p
 		}
+		p := idToPatient[view.PatientID]
+		p.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
+		p.CurrentDiseases[view.CurrentDisease] = 1
+		idToPatient[view.PatientID] = p
 	}
 
 	var resp NurseDashboardResp
@@ -356,11 +356,11 @@ func (h *DashboardHandler) GetDoctorDashboard(ctx *gin.Context) {
 				CurrentPrescribedMeds: make(map[string]int),
 				CurrentDiseases:       make(map[string]int),
 			}
-			v := idToPatient[view.PatientID]
-			v.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
-			v.CurrentDiseases[view.CurrentDisease] = 1
-			idToPatient[view.PatientID] = v
 		}
+		v := idToPatient[view.PatientID]
+		v.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
+		v.CurrentDiseases[view.CurrentDisease] = 1
+		idToPatient[view.PatientID] = v
 	}
 
 	var resp DoctorDashboardResp
@@ -392,7 +392,6 @@ func (h *DashboardHandler) GetDoctorDashboard(ctx *gin.Context) {
 				Name: disease,
 			})
 		}
-		resp.Patients = append(resp.Patients, patientResp)
 		resp.Patients = append(resp.Patients, patientResp)
 	}
 	ctx.JSON(http.StatusOK, resp)
