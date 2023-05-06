@@ -25,3 +25,10 @@ func Test_NewGormDatabase(t *testing.T) {
 	db := prepareDatabaseConnection(t)
 	assert.NotNil(t, db)
 }
+
+func Test_ListTables(t *testing.T) {
+	db := prepareDatabaseConnection(t)
+	err := db.DB.Exec(`
+		SELECT COUNT(table_name) FROM information_schema.tables WHERE table_schema = 'public';`).Error
+	assert.NoError(t, err)
+}

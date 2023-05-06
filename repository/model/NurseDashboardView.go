@@ -4,13 +4,18 @@ import (
 	"time"
 )
 
-type PatientDashboardView struct {
-	ID                   int
-	FirstName            string
-	LastName             string
+type NurseDashboardView struct {
+	NurseID              int
+	NurseFirstName       string
+	NurseLastName        string
+	PatientID            int
+	PatientFirstName     string
+	PatientLastName      string
 	Age                  int
 	Sex                  string
 	BloodType            string
+	PhoneNumber          string
+	Address              string
 	DOB                  time.Time
 	AssignedDoctorID     int
 	BodyTempertature     float64

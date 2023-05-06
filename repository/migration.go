@@ -44,6 +44,8 @@ func (d *GormDatabase) AutoMigrate() error {
 	LAST_NAME VARCHAR(50) NOT NULL,
     AGE INT NOT NULL,
     SEX CHAR NOT NULL,
+	PHONE_NUMBER VARCHAR(50) NOT NULL,
+	ADDRESS VARCHAR(50) NOT NULL,
     BLOOD_TYPE CHAR(2) NOT NULL,
     DOB DATE NOT NULL,
     DOCTOR_ID INT NOT NULL,
@@ -114,10 +116,10 @@ func (d *GormDatabase) AutoMigrate() error {
 
 	// insert some patients
 	if err := d.DB.Exec(`
-	INSERT INTO PATIENT (PATIENT_ID, FIRST_NAME, LAST_NAME, AGE, SEX, BLOOD_TYPE, DOB, DOCTOR_ID)
-	VALUES (1, 'Alice', 'Johnson', 35, 'F', 'A+', '1988-03-12', 1),
-       (2, 'Bob', 'Smith', 45, 'M', 'B-', '1978-07-24', 2),
-       (3, 'Carol', 'Davis', 28, 'F', 'O+', '1995-11-05', 1);`).Error; err != nil {
+	INSERT INTO PATIENT (PATIENT_ID, FIRST_NAME, LAST_NAME, AGE, SEX, BLOOD_TYPE, DOB, DOCTOR_ID, PHONE_NUMBER, ADDRESS)
+	VALUES (1, 'Alice', 'Johnson', 35, 'F', 'A+', '1988-03-12', 1, '123-456-7890', '123 Main St'),
+       (2, 'Bob', 'Smith', 45, 'M', 'B-', '1978-07-24', 2, '123-456-7891', '124 Main St'),
+       (3, 'Carol', 'Davis', 28, 'F', 'O+', '1995-11-05', 1, '123-456-7892', '125 Second St');`).Error; err != nil {
 		return err
 	}
 
@@ -186,15 +188,70 @@ func (d *GormDatabase) AutoMigrate() error {
         v.diastolic_pressure,
         m.prescribed_medications AS current_prescribed_med,
         d.disease AS current_disease
-    FROM
-        PATIENT AS p
-    JOIN
-        vital_sign AS v ON p.patient_id = v.patient_id
-    JOIN
-        patient_medications AS m ON p.patient_id = m.patient_id
-    JOIN
-        patient_disease AS d ON p.patient_id = d.patient_id
-	);`).Error; err != nil {
+		FROM PATIENT AS p
+		JOIN vital_sign AS v ON p.patient_id = v.patient_id
+		JOIN patient_medications AS m ON p.patient_id = m.patient_id
+		JOIN patient_disease AS d ON p.patient_id = d.patient_id);`).Error; err != nil {
+		return err
+	}
+
+	if err := d.DB.Exec(`
+	CREATE VIEW NURSE_DASHBOARD_VIEW AS (
+		SELECT
+		n.nurse_id,
+		n.first_name AS nurse_first_name,
+		n.last_name AS nurse_last_name,
+		p.patient_id,
+		p.first_name AS paitent_first_name,
+		p.last_name AS patient_last_name,
+		p.age,
+		p.sex,
+		p.blood_type,
+		p.phone_number,
+		p.address,
+		p.dob AS DOB,
+		p.doctor_id AS assigned_doctor_ID,
+		v.body_tempertature,
+		v.pulse_rate,
+		v.resipirate_rate,
+		v.systolic_pressure,
+		v.diastolic_pressure,
+		m.prescribed_medications AS current_prescribed_med,
+		d.disease AS current_disease
+		FROM nurse AS n
+		JOIN patient_nurse AS PN ON n.nurse_id = pn.nurse_id
+		JOIN patient AS p ON pn.patient_id = p.patient_id
+		JOIN vital_sign AS v ON p.patient_id = v.patient_id
+		JOIN patient_medications AS m ON p.patient_id = m.patient_id
+		JOIN patient_disease AS d ON p.patient_id = d.patient_id);`).Error; err != nil {
+		return err
+	}
+
+	if err := d.DB.Exec(`
+	CREATE VIEW DOCTOR_DASHBOARD_VIEW AS (
+		SELECT
+		p.first_name,
+		p.last_name,
+		p.age,
+		p.sex,
+		p.blood_type,
+		p.phone_number,
+		p.address,
+		p.dob AS DOB,
+		p.doctor_id AS assigned_doctor_ID,
+		v.body_tempertature,
+		v.pulse_rate,
+		v.resipirate_rate,
+		v.systolic_pressure,
+		v.diastolic_pressure,
+		m.prescribed_medications AS current_prescribed_med,
+		d.disease AS current_disease
+		FROM nurse AS n
+		JOIN patient_nurse AS PN ON n.nurse_id = pn.nurse_id
+		JOIN patient AS p ON pn.patient_id = p.patient_id
+		JOIN vital_sign AS v ON p.patient_id = v.patient_id
+		JOIN patient_medications AS m ON p.patient_id = m.patient_id
+		JOIN patient_disease AS d ON p.patient_id = d.patient_id);`).Error; err != nil {
 		return err
 	}
 

@@ -25,5 +25,7 @@ func Register(
 	dashboardHandler := NewDashboardHandler(logger, dashboardRepo)
 
 	router.GET("/api/dashboard/patient", dashboardHandler.GetPatientDashboard)
+	router.GET("/api/dashboard/doctor", dashboardHandler.GetDoctorDashboard)
+	router.GET("/api/dashboard/nurse", dashboardHandler.GetNurseDashboard)
 	return router
 }
