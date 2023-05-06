@@ -44,7 +44,7 @@ func (d *GormDatabase) AutoMigrate() error {
 	LAST_NAME VARCHAR(50) NOT NULL,
     AGE INT NOT NULL,
     SEX CHAR NOT NULL,
-    BLOOD_TYPE CHAR NOT NULL,
+    BLOOD_TYPE CHAR(2) NOT NULL,
     DOB DATE NOT NULL,
     DOCTOR_ID INT NOT NULL,
     PRIMARY KEY (PATIENT_ID),
@@ -103,17 +103,69 @@ func (d *GormDatabase) AutoMigrate() error {
 		return err
 	}
 
-	// insert
+	// insert some doctors
 	if err := d.DB.Exec(`
 	INSERT INTO DOCTOR (DOCTOR_ID, FIRST_NAME, LAST_NAME)
 		VALUES (1, 'John', 'Doe'),
        (2, 'Jane', 'Smith'),
-       (3, 'Michael', 'Johnson');
-	`).Error; err != nil {
+       (3, 'Michael', 'Johnson');`).Error; err != nil {
 		return err
 	}
 
-	// create views
+	// insert some patients
+	if err := d.DB.Exec(`
+	INSERT INTO PATIENT (PATIENT_ID, FIRST_NAME, LAST_NAME, AGE, SEX, BLOOD_TYPE, DOB, DOCTOR_ID)
+	VALUES (1, 'Alice', 'Johnson', 35, 'F', 'A+', '1988-03-12', 1),
+       (2, 'Bob', 'Smith', 45, 'M', 'B-', '1978-07-24', 2),
+       (3, 'Carol', 'Davis', 28, 'F', 'O+', '1995-11-05', 1);`).Error; err != nil {
+		return err
+	}
+
+	// insert some vital signs
+	if err := d.DB.Exec(`
+	INSERT INTO VITAL_SIGN (PATIENT_ID, ISSUE_TIME, BODY_TEMPERTATURE, PULSE_RATE, RESIPIRATE_RATE, SYSTOLIC_PRESSURE, DIASTOLIC_PRESSURE)
+	VALUES (1, '2023-05-01 10:30:00', 98.6, 70, 18, 120, 80),
+       (2, '2023-05-02 09:45:00', 99.2, 68, 16, 130, 85),
+       (3, '2023-05-03 15:15:00', 98.8, 72, 20, 125, 82);`).Error; err != nil {
+		return err
+	}
+
+	// insert some medications
+	if err := d.DB.Exec(`
+	INSERT INTO PATIENT_MEDICATIONS (PATIENT_ID, PRESCRIBED_MEDICATIONS)
+	VALUES (1, 'Aspirin'),
+       (1, 'Antibiotic'),
+       (2, 'Painkiller'),
+       (3, 'Antihistamine');`).Error; err != nil {
+		return err
+	}
+
+	// insert some diseases
+	if err := d.DB.Exec(`
+	INSERT INTO PATIENT_DISEASE (PATIENT_ID, DISEASE)
+	VALUES (1, 'Hypertension'),
+       (2, 'Diabetes'),
+       (3, 'Asthma');`).Error; err != nil {
+		return err
+	}
+
+	// insert some nurses
+	if err := d.DB.Exec(`
+	INSERT INTO NURSE (NURSE_ID, FIRST_NAME, LAST_NAME)
+	VALUES (1, 'Emily', 'Wilson'),
+       (2, 'David', 'Brown'),
+       (3, 'Sophia', 'Anderson');`).Error; err != nil {
+		return err
+	}
+
+	// insert some patient-nurse relationships
+	if err := d.DB.Exec(`
+	INSERT INTO PATIENT_NURSE (PATIENT_ID, NURSE_ID)
+	VALUES (1, 1),
+       (2, 2),
+       (3, 3);`).Error; err != nil {
+		return err
+	}
 
 	return nil
 }
