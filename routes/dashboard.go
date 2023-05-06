@@ -36,8 +36,8 @@ type PatientDashboardResp struct {
 	RespirationRate       int          `json:"respiration_rate"`
 	SystolicPressure      int          `json:"systolic_pressure"`
 	DiastolicPressure     int          `json:"diastolic_pressure"`
-	CurrentPrescribedMeds []medication `json:"current_prescribed_meds"`
-	CurrentDiseases       []disease    `json:"current_diseases"`
+	CurrentPrescribedMeds []Medication `json:"current_prescribed_meds"`
+	CurrentDiseases       []Disease    `json:"current_diseases"`
 }
 
 func (h *DashboardHandler) GetPatientDashboard(ctx *gin.Context) {
@@ -58,7 +58,7 @@ func (h *DashboardHandler) GetPatientDashboard(ctx *gin.Context) {
 	}
 	idToPatient := make(map[int]PatientDashboardResp)
 	for _, patient := range patients {
-		if v, ok := idToPatient[patient.ID]; !ok {
+		if _, ok := idToPatient[patient.ID]; !ok {
 			idToPatient[patient.ID] = PatientDashboardResp{
 				ID:                    patient.ID,
 				FirstName:             patient.FirstName,
@@ -73,15 +73,17 @@ func (h *DashboardHandler) GetPatientDashboard(ctx *gin.Context) {
 				RespirationRate:       patient.RespirationRate,
 				SystolicPressure:      patient.SystolicPressure,
 				DiastolicPressure:     patient.DiastolicPressure,
-				CurrentPrescribedMeds: []medication{},
-				CurrentDiseases:       []disease{},
+				CurrentPrescribedMeds: []Medication{},
+				CurrentDiseases:       []Disease{},
 			}
-			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, medication{
+			v := idToPatient[patient.ID]
+			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, Medication{
 				Name: patient.CurrentPrescribedMed,
 			})
-			v.CurrentDiseases = append(v.CurrentDiseases, disease{
+			v.CurrentDiseases = append(v.CurrentDiseases, Disease{
 				Name: patient.CurrentDisease,
 			})
+			idToPatient[patient.ID] = v
 		}
 	}
 	var resp PatientDashboardResp
@@ -130,8 +132,8 @@ type NursePatient struct {
 	RespirationRate       int          `json:"respiration_rate"`
 	SystolicPressure      int          `json:"systolic_pressure"`
 	DiastolicPressure     int          `json:"diastolic_pressure"`
-	CurrentPrescribedMeds []medication `json:"current_prescribed_meds"`
-	CurrentDiseases       []disease    `json:"current_diseases"`
+	CurrentPrescribedMeds []Medication `json:"current_prescribed_meds"`
+	CurrentDiseases       []Disease    `json:"current_diseases"`
 }
 
 func (h *DashboardHandler) GetNurseDashboard(ctx *gin.Context) {
@@ -153,7 +155,7 @@ func (h *DashboardHandler) GetNurseDashboard(ctx *gin.Context) {
 
 	idToPatient := make(map[int]NursePatient)
 	for _, patient := range patients {
-		if v, ok := idToPatient[patient.PatientID]; !ok {
+		if _, ok := idToPatient[patient.PatientID]; !ok {
 			idToPatient[patient.PatientID] = NursePatient{
 				NurseID:               patient.NurseID,
 				NurseFirstName:        patient.NurseFirstName,
@@ -173,15 +175,17 @@ func (h *DashboardHandler) GetNurseDashboard(ctx *gin.Context) {
 				RespirationRate:       patient.RespirationRate,
 				SystolicPressure:      patient.SystolicPressure,
 				DiastolicPressure:     patient.DiastolicPressure,
-				CurrentPrescribedMeds: []medication{},
-				CurrentDiseases:       []disease{},
+				CurrentPrescribedMeds: []Medication{},
+				CurrentDiseases:       []Disease{},
 			}
-			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, medication{
+			v := idToPatient[patient.PatientID]
+			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, Medication{
 				Name: patient.CurrentPrescribedMed,
 			})
-			v.CurrentDiseases = append(v.CurrentDiseases, disease{
+			v.CurrentDiseases = append(v.CurrentDiseases, Disease{
 				Name: patient.CurrentDisease,
 			})
+			idToPatient[patient.PatientID] = v
 		}
 	}
 
@@ -234,14 +238,14 @@ type DoctorPatient struct {
 	RespirationRate       int          `json:"respiration_rate"`
 	SystolicPressure      int          `json:"systolic_pressure"`
 	DiastolicPressure     int          `json:"diastolic_pressure"`
-	CurrentPrescribedMeds []medication `json:"current_prescribed_meds"`
-	CurrentDiseases       []disease    `json:"current_diseases"`
+	CurrentPrescribedMeds []Medication `json:"current_prescribed_meds"`
+	CurrentDiseases       []Disease    `json:"current_diseases"`
 }
-type medication struct {
+type Medication struct {
 	Name string `json:"name"`
 }
 
-type disease struct {
+type Disease struct {
 	Name string `json:"name"`
 }
 
@@ -263,7 +267,7 @@ func (h *DashboardHandler) GetDoctorDashboard(ctx *gin.Context) {
 	}
 	idToPatient := make(map[int]DoctorPatient)
 	for _, patient := range patients {
-		if v, ok := idToPatient[patient.PatientID]; !ok {
+		if _, ok := idToPatient[patient.PatientID]; !ok {
 			idToPatient[patient.PatientID] = DoctorPatient{
 				PatientID:             patient.PatientID,
 				FirstName:             patient.FirstName,
@@ -280,15 +284,17 @@ func (h *DashboardHandler) GetDoctorDashboard(ctx *gin.Context) {
 				RespirationRate:       patient.RespirationRate,
 				SystolicPressure:      patient.SystolicPressure,
 				DiastolicPressure:     patient.DiastolicPressure,
-				CurrentPrescribedMeds: []medication{},
-				CurrentDiseases:       []disease{},
+				CurrentPrescribedMeds: []Medication{},
+				CurrentDiseases:       []Disease{},
 			}
-			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, medication{
+			v := idToPatient[patient.PatientID]
+			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, Medication{
 				Name: patient.CurrentPrescribedMed,
 			})
-			v.CurrentDiseases = append(v.CurrentDiseases, disease{
+			v.CurrentDiseases = append(v.CurrentDiseases, Disease{
 				Name: patient.CurrentDisease,
 			})
+			idToPatient[patient.PatientID] = v
 		}
 	}
 
@@ -315,6 +321,5 @@ func (h *DashboardHandler) GetDoctorDashboard(ctx *gin.Context) {
 		}
 		resp.Patients = append(resp.Patients, patientResp)
 	}
-
 	ctx.JSON(http.StatusOK, resp)
 }
