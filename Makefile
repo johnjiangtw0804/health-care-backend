@@ -14,14 +14,14 @@ DATABASE_URL ?= sslmode=disable host=${DB_HOST} port=${DB_PORT} user=${DB_USER} 
 #
 stop-pg:
 	@echo "stop postgres..."
-	@docker stop health-care-pg | true
+	@docker stop health-care-pg | true > /dev/null
 
 restart-pg: stop-pg
 	@echo "restart postgres..."
 	@docker run -d --rm --name health-care-pg \
 				-p 5432:5432 -e POSTGRES_DB=health-care \
 				-e POSTGRES_USER=jonathan -e POSTGRES_PASSWORD=john0804 \
-				postgres:13.4-alpine
+				postgres:13.4-alpine | true
 
 #
 # Assume we are all mac users

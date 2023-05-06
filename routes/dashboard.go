@@ -51,60 +51,82 @@ func (h *DashboardHandler) GetPatientDashboard(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "patient_id must be an integer"})
 		return
 	}
-	patients, err := h.repo.SelectPatientDashboard(pid)
+	patientViews, err := h.repo.SelectPatientDashboard(pid)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	idToPatient := make(map[int]PatientDashboardResp)
-	for _, patient := range patients {
-		if _, ok := idToPatient[patient.ID]; !ok {
-			idToPatient[patient.ID] = PatientDashboardResp{
-				ID:                    patient.ID,
-				FirstName:             patient.FirstName,
-				LastName:              patient.LastName,
-				Age:                   patient.Age,
-				Sex:                   patient.Sex,
-				BloodType:             patient.BloodType,
-				DOB:                   patient.DOB,
-				AssignedDoctorID:      patient.AssignedDoctorID,
-				BodyTemperature:       patient.BodyTemperature,
-				PulseRate:             patient.PulseRate,
-				RespirationRate:       patient.RespirationRate,
-				SystolicPressure:      patient.SystolicPressure,
-				DiastolicPressure:     patient.DiastolicPressure,
-				CurrentPrescribedMeds: []Medication{},
-				CurrentDiseases:       []Disease{},
+	type tempPatient struct {
+		ID                    int
+		FirstName             string
+		LastName              string
+		Age                   int
+		Sex                   string
+		BloodType             string
+		DOB                   time.Time
+		AssignedDoctorID      int
+		BodyTemperature       float64
+		PulseRate             int
+		RespirationRate       int
+		SystolicPressure      int
+		DiastolicPressure     int
+		CurrentPrescribedMeds map[string]int
+		CurrentDiseases       map[string]int
+	}
+	idToPatient := make(map[int]tempPatient)
+	for _, view := range patientViews {
+		if _, ok := idToPatient[view.ID]; !ok {
+			idToPatient[view.ID] = tempPatient{
+				ID:                    view.ID,
+				FirstName:             view.FirstName,
+				LastName:              view.LastName,
+				Age:                   view.Age,
+				Sex:                   view.Sex,
+				BloodType:             view.BloodType,
+				DOB:                   view.DOB,
+				AssignedDoctorID:      view.AssignedDoctorID,
+				BodyTemperature:       view.BodyTemperature,
+				PulseRate:             view.PulseRate,
+				RespirationRate:       view.RespirationRate,
+				SystolicPressure:      view.SystolicPressure,
+				DiastolicPressure:     view.DiastolicPressure,
+				CurrentPrescribedMeds: make(map[string]int),
+				CurrentDiseases:       make(map[string]int),
 			}
-			v := idToPatient[patient.ID]
-			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, Medication{
-				Name: patient.CurrentPrescribedMed,
-			})
-			v.CurrentDiseases = append(v.CurrentDiseases, Disease{
-				Name: patient.CurrentDisease,
-			})
-			idToPatient[patient.ID] = v
 		}
+		p := idToPatient[view.ID]
+		p.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
+		p.CurrentDiseases[view.CurrentDisease] = 1
+		idToPatient[view.ID] = p
 	}
 	var resp PatientDashboardResp
 	for _, patient := range idToPatient {
 		// we can only have one patient since the pid is unique
 		resp = PatientDashboardResp{
-			ID:                    patient.ID,
-			FirstName:             patient.FirstName,
-			LastName:              patient.LastName,
-			Age:                   patient.Age,
-			Sex:                   patient.Sex,
-			BloodType:             patient.BloodType,
-			DOB:                   patient.DOB,
-			AssignedDoctorID:      patient.AssignedDoctorID,
-			BodyTemperature:       patient.BodyTemperature,
-			PulseRate:             patient.PulseRate,
-			RespirationRate:       patient.RespirationRate,
-			SystolicPressure:      patient.SystolicPressure,
-			DiastolicPressure:     patient.DiastolicPressure,
-			CurrentPrescribedMeds: patient.CurrentPrescribedMeds,
-			CurrentDiseases:       patient.CurrentDiseases,
+			ID:                patient.ID,
+			FirstName:         patient.FirstName,
+			LastName:          patient.LastName,
+			Age:               patient.Age,
+			Sex:               patient.Sex,
+			BloodType:         patient.BloodType,
+			DOB:               patient.DOB,
+			AssignedDoctorID:  patient.AssignedDoctorID,
+			BodyTemperature:   patient.BodyTemperature,
+			PulseRate:         patient.PulseRate,
+			RespirationRate:   patient.RespirationRate,
+			SystolicPressure:  patient.SystolicPressure,
+			DiastolicPressure: patient.DiastolicPressure,
+		}
+		// convert map to array
+		for med := range patient.CurrentPrescribedMeds {
+			resp.CurrentPrescribedMeds = append(resp.CurrentPrescribedMeds, Medication{
+				Name: med,
+			})
+		}
+		for disease := range patient.CurrentDiseases {
+			resp.CurrentDiseases = append(resp.CurrentDiseases, Disease{
+				Name: disease,
+			})
 		}
 	}
 	ctx.JSON(http.StatusOK, resp)
@@ -147,71 +169,97 @@ func (h *DashboardHandler) GetNurseDashboard(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "nurse_id must be integer"})
 		return
 	}
-	patients, err := h.repo.SelectNurseDashboard(nid)
+	views, err := h.repo.SelectNurseDashboard(nid)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	type tempNursePatient struct {
+		NurseID               int
+		NurseFirstName        string
+		NurseLastName         string
+		PatientID             int
+		PatientFirstName      string
+		PatientLastName       string
+		Age                   int
+		Sex                   string
+		BloodType             string
+		PhoneNumber           string
+		Address               string
+		DOB                   time.Time
+		AssignedDoctorID      int
+		BodyTemperature       float64
+		PulseRate             int
+		RespirationRate       int
+		SystolicPressure      int
+		DiastolicPressure     int
+		CurrentPrescribedMeds map[string]int
+		CurrentDiseases       map[string]int
+	}
 
-	idToPatient := make(map[int]NursePatient)
-	for _, patient := range patients {
-		if _, ok := idToPatient[patient.PatientID]; !ok {
-			idToPatient[patient.PatientID] = NursePatient{
-				NurseID:               patient.NurseID,
-				NurseFirstName:        patient.NurseFirstName,
-				NurseLastName:         patient.NurseLastName,
-				PatientID:             patient.PatientID,
-				PatientFirstName:      patient.PatientFirstName,
-				PatientLastName:       patient.PatientLastName,
-				Age:                   patient.Age,
-				Sex:                   patient.Sex,
-				BloodType:             patient.BloodType,
-				PhoneNumber:           patient.PhoneNumber,
-				Address:               patient.Address,
-				DOB:                   patient.DOB,
-				AssignedDoctorID:      patient.AssignedDoctorID,
-				BodyTemperature:       patient.BodyTemperature,
-				PulseRate:             patient.PulseRate,
-				RespirationRate:       patient.RespirationRate,
-				SystolicPressure:      patient.SystolicPressure,
-				DiastolicPressure:     patient.DiastolicPressure,
-				CurrentPrescribedMeds: []Medication{},
-				CurrentDiseases:       []Disease{},
+	idToPatient := make(map[int]tempNursePatient)
+	for _, view := range views {
+		if _, ok := idToPatient[view.PatientID]; !ok {
+			idToPatient[view.PatientID] = tempNursePatient{
+				NurseID:               view.NurseID,
+				NurseFirstName:        view.NurseFirstName,
+				NurseLastName:         view.NurseLastName,
+				PatientID:             view.PatientID,
+				PatientFirstName:      view.PatientFirstName,
+				PatientLastName:       view.PatientLastName,
+				Age:                   view.Age,
+				Sex:                   view.Sex,
+				BloodType:             view.BloodType,
+				PhoneNumber:           view.PhoneNumber,
+				Address:               view.Address,
+				DOB:                   view.DOB,
+				AssignedDoctorID:      view.AssignedDoctorID,
+				BodyTemperature:       view.BodyTemperature,
+				PulseRate:             view.PulseRate,
+				RespirationRate:       view.RespirationRate,
+				SystolicPressure:      view.SystolicPressure,
+				DiastolicPressure:     view.DiastolicPressure,
+				CurrentPrescribedMeds: make(map[string]int),
+				CurrentDiseases:       make(map[string]int),
 			}
-			v := idToPatient[patient.PatientID]
-			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, Medication{
-				Name: patient.CurrentPrescribedMed,
-			})
-			v.CurrentDiseases = append(v.CurrentDiseases, Disease{
-				Name: patient.CurrentDisease,
-			})
-			idToPatient[patient.PatientID] = v
+			p := idToPatient[view.PatientID]
+			p.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
+			p.CurrentDiseases[view.CurrentDisease] = 1
+			idToPatient[view.PatientID] = p
 		}
 	}
 
 	var resp NurseDashboardResp
 	for _, patient := range idToPatient {
 		patientResp := NursePatient{
-			NurseID:               patient.NurseID,
-			NurseFirstName:        patient.NurseFirstName,
-			NurseLastName:         patient.NurseLastName,
-			PatientID:             patient.PatientID,
-			PatientFirstName:      patient.PatientFirstName,
-			PatientLastName:       patient.PatientLastName,
-			Age:                   patient.Age,
-			Sex:                   patient.Sex,
-			BloodType:             patient.BloodType,
-			PhoneNumber:           patient.PhoneNumber,
-			Address:               patient.Address,
-			DOB:                   patient.DOB,
-			AssignedDoctorID:      patient.AssignedDoctorID,
-			BodyTemperature:       patient.BodyTemperature,
-			PulseRate:             patient.PulseRate,
-			RespirationRate:       patient.RespirationRate,
-			SystolicPressure:      patient.SystolicPressure,
-			DiastolicPressure:     patient.DiastolicPressure,
-			CurrentPrescribedMeds: patient.CurrentPrescribedMeds,
-			CurrentDiseases:       patient.CurrentDiseases,
+			NurseID:           patient.NurseID,
+			NurseFirstName:    patient.NurseFirstName,
+			NurseLastName:     patient.NurseLastName,
+			PatientID:         patient.PatientID,
+			PatientFirstName:  patient.PatientFirstName,
+			PatientLastName:   patient.PatientLastName,
+			Age:               patient.Age,
+			Sex:               patient.Sex,
+			BloodType:         patient.BloodType,
+			PhoneNumber:       patient.PhoneNumber,
+			Address:           patient.Address,
+			DOB:               patient.DOB,
+			AssignedDoctorID:  patient.AssignedDoctorID,
+			BodyTemperature:   patient.BodyTemperature,
+			PulseRate:         patient.PulseRate,
+			RespirationRate:   patient.RespirationRate,
+			SystolicPressure:  patient.SystolicPressure,
+			DiastolicPressure: patient.DiastolicPressure,
+		}
+		for med := range patient.CurrentPrescribedMeds {
+			patientResp.CurrentPrescribedMeds = append(patientResp.CurrentPrescribedMeds, Medication{
+				Name: med,
+			})
+		}
+		for disease := range patient.CurrentDiseases {
+			patientResp.CurrentDiseases = append(patientResp.CurrentDiseases, Disease{
+				Name: disease,
+			})
 		}
 		resp.Patients = append(resp.Patients, patientResp)
 	}
@@ -260,65 +308,91 @@ func (h *DashboardHandler) GetDoctorDashboard(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "doctor_id must be integer"})
 		return
 	}
-	patients, err := h.repo.SelectDoctorDashboard(did)
+	views, err := h.repo.SelectDoctorDashboard(did)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	idToPatient := make(map[int]DoctorPatient)
-	for _, patient := range patients {
-		if _, ok := idToPatient[patient.PatientID]; !ok {
-			idToPatient[patient.PatientID] = DoctorPatient{
-				PatientID:             patient.PatientID,
-				FirstName:             patient.FirstName,
-				LastName:              patient.LastName,
-				Age:                   patient.Age,
-				Sex:                   patient.Sex,
-				BloodType:             patient.BloodType,
-				PhoneNumber:           patient.PhoneNumber,
-				Address:               patient.Address,
-				DOB:                   patient.DOB,
-				AssignedDoctorID:      patient.AssignedDoctorID,
-				BodyTemperature:       patient.BodyTemperature,
-				PulseRate:             patient.PulseRate,
-				RespirationRate:       patient.RespirationRate,
-				SystolicPressure:      patient.SystolicPressure,
-				DiastolicPressure:     patient.DiastolicPressure,
-				CurrentPrescribedMeds: []Medication{},
-				CurrentDiseases:       []Disease{},
+
+	type tempDoctorPatient struct {
+		PatientID             int
+		FirstName             string
+		LastName              string
+		Age                   int
+		Sex                   string
+		BloodType             string
+		PhoneNumber           string
+		Address               string
+		DOB                   time.Time
+		AssignedDoctorID      int
+		BodyTemperature       float64
+		PulseRate             int
+		RespirationRate       int
+		SystolicPressure      int
+		DiastolicPressure     int
+		CurrentPrescribedMeds map[string]int
+		CurrentDiseases       map[string]int
+	}
+
+	idToPatient := make(map[int]tempDoctorPatient)
+	for _, view := range views {
+		if _, ok := idToPatient[view.PatientID]; !ok {
+			idToPatient[view.PatientID] = tempDoctorPatient{
+				PatientID:             view.PatientID,
+				FirstName:             view.FirstName,
+				LastName:              view.LastName,
+				Age:                   view.Age,
+				Sex:                   view.Sex,
+				BloodType:             view.BloodType,
+				PhoneNumber:           view.PhoneNumber,
+				Address:               view.Address,
+				DOB:                   view.DOB,
+				AssignedDoctorID:      view.AssignedDoctorID,
+				BodyTemperature:       view.BodyTemperature,
+				PulseRate:             view.PulseRate,
+				RespirationRate:       view.RespirationRate,
+				SystolicPressure:      view.SystolicPressure,
+				DiastolicPressure:     view.DiastolicPressure,
+				CurrentPrescribedMeds: make(map[string]int),
+				CurrentDiseases:       make(map[string]int),
 			}
-			v := idToPatient[patient.PatientID]
-			v.CurrentPrescribedMeds = append(v.CurrentPrescribedMeds, Medication{
-				Name: patient.CurrentPrescribedMed,
-			})
-			v.CurrentDiseases = append(v.CurrentDiseases, Disease{
-				Name: patient.CurrentDisease,
-			})
-			idToPatient[patient.PatientID] = v
+			v := idToPatient[view.PatientID]
+			v.CurrentPrescribedMeds[view.CurrentPrescribedMed] = 1
+			v.CurrentDiseases[view.CurrentDisease] = 1
+			idToPatient[view.PatientID] = v
 		}
 	}
 
 	var resp DoctorDashboardResp
 	for _, patient := range idToPatient {
 		patientResp := DoctorPatient{
-			PatientID:             patient.PatientID,
-			FirstName:             patient.FirstName,
-			LastName:              patient.LastName,
-			Age:                   patient.Age,
-			Sex:                   patient.Sex,
-			BloodType:             patient.BloodType,
-			PhoneNumber:           patient.PhoneNumber,
-			Address:               patient.Address,
-			DOB:                   patient.DOB,
-			AssignedDoctorID:      patient.AssignedDoctorID,
-			BodyTemperature:       patient.BodyTemperature,
-			PulseRate:             patient.PulseRate,
-			RespirationRate:       patient.RespirationRate,
-			SystolicPressure:      patient.SystolicPressure,
-			DiastolicPressure:     patient.DiastolicPressure,
-			CurrentPrescribedMeds: patient.CurrentPrescribedMeds,
-			CurrentDiseases:       patient.CurrentDiseases,
+			PatientID:         patient.PatientID,
+			FirstName:         patient.FirstName,
+			LastName:          patient.LastName,
+			Age:               patient.Age,
+			Sex:               patient.Sex,
+			BloodType:         patient.BloodType,
+			PhoneNumber:       patient.PhoneNumber,
+			Address:           patient.Address,
+			DOB:               patient.DOB,
+			AssignedDoctorID:  patient.AssignedDoctorID,
+			BodyTemperature:   patient.BodyTemperature,
+			PulseRate:         patient.PulseRate,
+			RespirationRate:   patient.RespirationRate,
+			SystolicPressure:  patient.SystolicPressure,
+			DiastolicPressure: patient.DiastolicPressure,
 		}
+		for med := range patient.CurrentPrescribedMeds {
+			patientResp.CurrentPrescribedMeds = append(patientResp.CurrentPrescribedMeds, Medication{
+				Name: med,
+			})
+		}
+		for disease := range patient.CurrentDiseases {
+			patientResp.CurrentDiseases = append(patientResp.CurrentDiseases, Disease{
+				Name: disease,
+			})
+		}
+		resp.Patients = append(resp.Patients, patientResp)
 		resp.Patients = append(resp.Patients, patientResp)
 	}
 	ctx.JSON(http.StatusOK, resp)
