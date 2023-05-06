@@ -5,7 +5,7 @@ import (
 )
 
 type Dashboard interface {
-	SelectPatientDashboard(int) (*model.PatientDashboardView, error)
+	SelectPatientDashboard(int) ([]model.PatientDashboardView, error)
 	SelectDoctorDashboard(did int) ([]model.DoctorDashboardView, error)
 	SelectNurseDashboard(nid int) ([]model.NurseDashboardView, error)
 }
@@ -18,12 +18,12 @@ func NewDashboardRepo(db *GormDatabase) Dashboard {
 	return &dashboardRepo{db: db}
 }
 
-func (d *dashboardRepo) SelectPatientDashboard(pid int) (*model.PatientDashboardView, error) {
-	var record model.PatientDashboardView
-	if err := d.db.DB.Raw(`SELECT * FROM public.patient_dashboard_view WHERE id = ?`, pid).Scan(&record).Error; err != nil {
+func (d *dashboardRepo) SelectPatientDashboard(pid int) ([]model.PatientDashboardView, error) {
+	var records []model.PatientDashboardView
+	if err := d.db.DB.Raw(`SELECT * FROM public.patient_dashboard_view WHERE id = ?`, pid).Scan(&records).Error; err != nil {
 		return nil, err
 	}
-	return &record, nil
+	return records, nil
 }
 
 func (d *dashboardRepo) SelectDoctorDashboard(did int) ([]model.DoctorDashboardView, error) {

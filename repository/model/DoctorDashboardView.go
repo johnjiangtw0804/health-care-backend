@@ -5,7 +5,7 @@ import (
 )
 
 type DoctorDashboardView struct {
-	ID                   int
+	PatientID            int
 	FirstName            string
 	LastName             string
 	Age                  int
@@ -15,7 +15,7 @@ type DoctorDashboardView struct {
 	Address              string
 	DOB                  time.Time
 	AssignedDoctorID     int
-	BodyTempertature     float64
+	BodyTemperature      float64
 	PulseRate            int
 	RespirationRate      int
 	SystolicPressure     int

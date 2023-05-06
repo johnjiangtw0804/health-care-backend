@@ -18,7 +18,7 @@ type NurseDashboardView struct {
 	Address              string
 	DOB                  time.Time
 	AssignedDoctorID     int
-	BodyTempertature     float64
+	BodyTemperature      float64
 	PulseRate            int
 	RespirationRate      int
 	SystolicPressure     int

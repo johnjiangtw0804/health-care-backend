@@ -13,7 +13,7 @@ type PatientDashboardView struct {
 	BloodType            string
 	DOB                  time.Time
 	AssignedDoctorID     int
-	BodyTempertature     float64
+	BodyTemperature      float64
 	PulseRate            int
 	RespirationRate      int
 	SystolicPressure     int

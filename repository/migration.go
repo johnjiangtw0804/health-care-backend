@@ -58,7 +58,7 @@ func (d *GormDatabase) AutoMigrate() error {
 	CREATE TABLE VITAL_SIGN (
     PATIENT_ID INT,
     ISSUE_TIME TIMESTAMP,
-    BODY_TEMPERTATURE FLOAT NOT NULL,
+    BODY_TEMPERATURE FLOAT NOT NULL,
     PULSE_RATE INT NOT NULL,
     RESIPIRATE_RATE INT NOT NULL,
     SYSTOLIC_PRESSURE INT NOT NULL,
@@ -125,7 +125,7 @@ func (d *GormDatabase) AutoMigrate() error {
 
 	// insert some vital signs
 	if err := d.DB.Exec(`
-	INSERT INTO VITAL_SIGN (PATIENT_ID, ISSUE_TIME, BODY_TEMPERTATURE, PULSE_RATE, RESIPIRATE_RATE, SYSTOLIC_PRESSURE, DIASTOLIC_PRESSURE)
+	INSERT INTO VITAL_SIGN (PATIENT_ID, ISSUE_TIME, BODY_TEMPERATURE, PULSE_RATE, RESIPIRATE_RATE, SYSTOLIC_PRESSURE, DIASTOLIC_PRESSURE)
 	VALUES (1, '2023-05-01 10:30:00', 98.6, 70, 18, 120, 80),
        (2, '2023-05-02 09:45:00', 99.2, 68, 16, 130, 85),
        (3, '2023-05-03 15:15:00', 98.8, 72, 20, 125, 82);`).Error; err != nil {
@@ -172,7 +172,7 @@ func (d *GormDatabase) AutoMigrate() error {
 	// generate some views
 	if err := d.DB.Exec(`
 	CREATE VIEW PATIENT_DASHBOARD_VIEW AS (
-    SELECT
+    SELECT DISTINCT
         p.patient_id AS ID,
         p.first_name,
         p.last_name,
@@ -181,7 +181,7 @@ func (d *GormDatabase) AutoMigrate() error {
         p.blood_type,
         p.dob AS DOB,
         p.doctor_id AS assigned_doctor_ID,
-        v.body_tempertature,
+        v.body_temperature,
         v.pulse_rate,
         v.resipirate_rate,
         v.systolic_pressure,
@@ -197,7 +197,7 @@ func (d *GormDatabase) AutoMigrate() error {
 
 	if err := d.DB.Exec(`
 	CREATE VIEW NURSE_DASHBOARD_VIEW AS (
-		SELECT
+		SELECT DISTINCT
 		n.nurse_id,
 		n.first_name AS nurse_first_name,
 		n.last_name AS nurse_last_name,
@@ -211,7 +211,7 @@ func (d *GormDatabase) AutoMigrate() error {
 		p.address,
 		p.dob AS DOB,
 		p.doctor_id AS assigned_doctor_ID,
-		v.body_tempertature,
+		v.body_temperature,
 		v.pulse_rate,
 		v.resipirate_rate,
 		v.systolic_pressure,
@@ -229,7 +229,8 @@ func (d *GormDatabase) AutoMigrate() error {
 
 	if err := d.DB.Exec(`
 	CREATE VIEW DOCTOR_DASHBOARD_VIEW AS (
-		SELECT
+		SELECT DISTINCT
+		p.patient_id,
 		p.first_name,
 		p.last_name,
 		p.age,
@@ -239,7 +240,7 @@ func (d *GormDatabase) AutoMigrate() error {
 		p.address,
 		p.dob AS DOB,
 		p.doctor_id AS assigned_doctor_ID,
-		v.body_tempertature,
+		v.body_temperature,
 		v.pulse_rate,
 		v.resipirate_rate,
 		v.systolic_pressure,
