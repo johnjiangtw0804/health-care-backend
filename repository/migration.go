@@ -60,7 +60,7 @@ func (d *GormDatabase) AutoMigrate() error {
     ISSUE_TIME TIMESTAMP,
     BODY_TEMPERATURE FLOAT NOT NULL,
     PULSE_RATE INT NOT NULL,
-    RESIPIRATE_RATE INT NOT NULL,
+    RESPIRATION_RATE INT NOT NULL,
     SYSTOLIC_PRESSURE INT NOT NULL,
     DIASTOLIC_PRESSURE INT NOT NULL,
     PRIMARY KEY(PATIENT_ID, ISSUE_TIME),
@@ -119,16 +119,18 @@ func (d *GormDatabase) AutoMigrate() error {
 	INSERT INTO PATIENT (PATIENT_ID, FIRST_NAME, LAST_NAME, AGE, SEX, BLOOD_TYPE, DOB, DOCTOR_ID, PHONE_NUMBER, ADDRESS)
 	VALUES (1, 'Alice', 'Johnson', 35, 'F', 'A+', '1988-03-12', 1, '123-456-7890', '123 Main St'),
        (2, 'Bob', 'Smith', 45, 'M', 'B-', '1978-07-24', 2, '123-456-7891', '124 Main St'),
-       (3, 'Carol', 'Davis', 28, 'F', 'O+', '1995-11-05', 1, '123-456-7892', '125 Second St');`).Error; err != nil {
+       (3, 'Carol', 'Davis', 28, 'F', 'O+', '1995-11-05', 1, '123-456-7892', '125 Second St'),
+       (4, 'Kenny', 'Kim', 35, 'F', 'O+', '1995-11-05', 1, '123-456-7882', '126 Second St');`).Error; err != nil {
 		return err
 	}
 
 	// insert some vital signs
 	if err := d.DB.Exec(`
-	INSERT INTO VITAL_SIGN (PATIENT_ID, ISSUE_TIME, BODY_TEMPERATURE, PULSE_RATE, RESIPIRATE_RATE, SYSTOLIC_PRESSURE, DIASTOLIC_PRESSURE)
+	INSERT INTO VITAL_SIGN (PATIENT_ID, ISSUE_TIME, BODY_TEMPERATURE, PULSE_RATE, RESPIRATION_RATE, SYSTOLIC_PRESSURE, DIASTOLIC_PRESSURE)
 	VALUES (1, '2023-05-01 10:30:00', 98.6, 70, 18, 120, 80),
        (2, '2023-05-02 09:45:00', 99.2, 68, 16, 130, 85),
-       (3, '2023-05-03 15:15:00', 98.8, 72, 20, 125, 82);`).Error; err != nil {
+       (3, '2023-05-03 15:15:00', 98.8, 72, 20, 125, 82),
+	   (4, '2023-03-02 11:15:00', 98.8, 72, 20, 125, 82);`).Error; err != nil {
 		return err
 	}
 
@@ -138,7 +140,8 @@ func (d *GormDatabase) AutoMigrate() error {
 	VALUES (1, 'Aspirin'),
        (1, 'Antibiotic'),
        (2, 'Painkiller'),
-       (3, 'Antihistamine');`).Error; err != nil {
+       (3, 'Antihistamine'),
+       (4, 'Antihistamine');`).Error; err != nil {
 		return err
 	}
 
@@ -147,7 +150,8 @@ func (d *GormDatabase) AutoMigrate() error {
 	INSERT INTO PATIENT_DISEASE (PATIENT_ID, DISEASE)
 	VALUES (1, 'Hypertension'),
        (2, 'Diabetes'),
-       (3, 'Asthma');`).Error; err != nil {
+       (3, 'Asthma'),
+	   (4, 'Fever');`).Error; err != nil {
 		return err
 	}
 
@@ -165,7 +169,8 @@ func (d *GormDatabase) AutoMigrate() error {
 	INSERT INTO PATIENT_NURSE (PATIENT_ID, NURSE_ID)
 	VALUES (1, 1),
        (2, 2),
-       (3, 3);`).Error; err != nil {
+       (3, 3),
+	   (4, 1);`).Error; err != nil {
 		return err
 	}
 
@@ -183,7 +188,7 @@ func (d *GormDatabase) AutoMigrate() error {
         p.doctor_id AS assigned_doctor_ID,
         v.body_temperature,
         v.pulse_rate,
-        v.resipirate_rate,
+        v.respiration_rate,
         v.systolic_pressure,
         v.diastolic_pressure,
         m.prescribed_medications AS current_prescribed_med,
@@ -213,7 +218,7 @@ func (d *GormDatabase) AutoMigrate() error {
 		p.doctor_id AS assigned_doctor_ID,
 		v.body_temperature,
 		v.pulse_rate,
-		v.resipirate_rate,
+		v.respiration_rate,
 		v.systolic_pressure,
 		v.diastolic_pressure,
 		m.prescribed_medications AS current_prescribed_med,
@@ -240,9 +245,11 @@ func (d *GormDatabase) AutoMigrate() error {
 		p.address,
 		p.dob AS DOB,
 		p.doctor_id AS assigned_doctor_ID,
+		doc.first_name AS assigned_doctor_first_name,
+		doc.last_name AS assigned_doctor_last_name,
 		v.body_temperature,
 		v.pulse_rate,
-		v.resipirate_rate,
+		v.respiration_rate,
 		v.systolic_pressure,
 		v.diastolic_pressure,
 		m.prescribed_medications AS current_prescribed_med,
@@ -252,7 +259,8 @@ func (d *GormDatabase) AutoMigrate() error {
 		JOIN patient AS p ON pn.patient_id = p.patient_id
 		JOIN vital_sign AS v ON p.patient_id = v.patient_id
 		JOIN patient_medications AS m ON p.patient_id = m.patient_id
-		JOIN patient_disease AS d ON p.patient_id = d.patient_id);`).Error; err != nil {
+		JOIN patient_disease AS d ON p.patient_id = d.patient_id
+		JOIN doctor AS doc ON p.doctor_id = doc.doctor_id);`).Error; err != nil {
 		return err
 	}
 
