@@ -186,6 +186,8 @@ func (d *GormDatabase) AutoMigrate() error {
         p.blood_type,
         p.dob AS DOB,
         p.doctor_id AS assigned_doctor_ID,
+		doc.first_name AS assigned_doctor_first_name,
+		doc.last_name AS assigned_doctor_last_name,
         v.body_temperature,
         v.pulse_rate,
         v.respiration_rate,
@@ -196,7 +198,8 @@ func (d *GormDatabase) AutoMigrate() error {
 		FROM PATIENT AS p
 		JOIN vital_sign AS v ON p.patient_id = v.patient_id
 		JOIN patient_medications AS m ON p.patient_id = m.patient_id
-		JOIN patient_disease AS d ON p.patient_id = d.patient_id);`).Error; err != nil {
+		JOIN patient_disease AS d ON p.patient_id = d.patient_id
+		JOIN doctor AS doc ON p.doctor_id = doc.doctor_id);`).Error; err != nil {
 		return err
 	}
 
@@ -216,6 +219,8 @@ func (d *GormDatabase) AutoMigrate() error {
 		p.address,
 		p.dob AS DOB,
 		p.doctor_id AS assigned_doctor_ID,
+		doc.first_name AS assigned_doctor_first_name,
+		doc.last_name AS assigned_doctor_last_name,
 		v.body_temperature,
 		v.pulse_rate,
 		v.respiration_rate,
@@ -228,7 +233,8 @@ func (d *GormDatabase) AutoMigrate() error {
 		JOIN patient AS p ON pn.patient_id = p.patient_id
 		JOIN vital_sign AS v ON p.patient_id = v.patient_id
 		JOIN patient_medications AS m ON p.patient_id = m.patient_id
-		JOIN patient_disease AS d ON p.patient_id = d.patient_id);`).Error; err != nil {
+		JOIN patient_disease AS d ON p.patient_id = d.patient_id
+		JOIN doctor AS doc ON p.doctor_id = doc.doctor_id);`).Error; err != nil {
 		return err
 	}
 
